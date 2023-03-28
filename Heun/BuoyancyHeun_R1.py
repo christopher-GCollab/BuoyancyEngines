@@ -79,6 +79,9 @@ class BuoyEng:
         self.vel = 0.
         self.depth = 0.
 
+        self.currentAcc = 0
+        self.currentVel = 0
+
     
     def calc_density(self):
         # density = polyfit density @ depth with column profile data
@@ -123,7 +126,7 @@ class BuoyEng:
 
     def calc_depth(self, dt):
         # Returns Depth
-        self.depth += self.vel*dt - 0.5*self.acc*np.square(dt)
+        self.depth += self.vel * dt - 0.5 * self.acc * np.square(dt)
         return self.depth
 
     def updateAll(self, dt, vol_L):
@@ -135,6 +138,25 @@ class BuoyEng:
         self.calc_acc()
         self.calc_vel(dt)
         self.calc_depth(dt)
+
+        self.currentAcc = self.acc
+        self.currentVel = self.vel
+
+    def updateNext(self, dt, vol_L):
+        self.calc_density()
+        self.get_vol(vol_L)
+        self.calc_dVol()
+        self.calc_drag()
+        self.calc_buoyancy()
+        self.calc_acc()
+        self.calc_vel(dt)
+        self.calc_depth(dt)
+
+    def heunEstimate(self, dt):
+
+        self.acc = 0.5 * (self.currentAcc + self.acc)
+        self.vel = self.currentVel + self.acc * dt
+        self.depth += self.vel * dt - 0.5*self.acc*np.square(dt)
 
         # print(self.vol)
         # print(self.dVol)
@@ -190,11 +212,8 @@ while i < duration:
     vol_L = fluidLevelToLitres(fluidLevel, maxPumpFluid)
     
     buoyEng.updateAll(dt, vol_L)
-    depth = buoyEng.depth
-    vel = buoyEng.vel
-    acc = buoyEng.acc
-    buoyEng.updateAll(dt, vol_L) # run second time to predict
-    depth = depth + (depth + buoyEng.depth)/2
+    buoyEng.updateNext(dt, vol_L)
+    buoyEng.heunEstimate(dt)
 
     if buoyEng.depth > sea_surface:
         # Break loop when engine has reached surface
@@ -216,7 +235,7 @@ while i < duration:
 
 # -----------------------------------------
 fig, (ax1, ax2, ax3, ax4, ax5, ax6, ax7) = plt.subplots(7, figsize=(8, 8), sharex=True)
-fig.suptitle('Euler (timestep 0.0001)')
+fig.suptitle('Heun Estimate (dt = 0.0001)')
 
 ax1.plot(time, xz, label = 'Depth')
 ax1.plot(time, plt_depthTarget, 'r', label = 'depth target')
