@@ -164,6 +164,7 @@ i = 0   # Start | seconds
 dt = 0.00001 # Timestep |seconds
 sea_surface = 0 # Depth/height | meters
 commandInterval = 1 #
+duration = 200 # Sim duration | seconds #84 seconds shows - it's unstable
 
 # Parameters ------------------------
 maxPumpFluid = 12 
@@ -175,7 +176,6 @@ drainRate = 0.05 # Drain rate (sink) | Liters/second
 
 # Initial Conditions ------------------------
 # vol_L = 8.
-duration = 200 # Sim duration | seconds #84 seconds shows something
 pumpStatus = 0 # Pump on (1) | Pump Holding (0) | Pump draining (-1)
 
 buoyEng = BuoyEng()
